@@ -1,4 +1,4 @@
 # STDF_bees
-This repository contains the code to perform the analyses of the manuscript "Richness and conservation status of bees in the seasonally tropical dry forest of the Neotropical region"
+This repository contains the code to perform the analyses of the manuscript "Neotropical dry forest host diverse bee communities despite conservation and taxonomical challenges"
 
-The data needed to reproduce the analyses are available at: 
+
