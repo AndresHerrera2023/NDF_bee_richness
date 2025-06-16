@@ -1,8 +1,8 @@
-  ### Code: Download GBIF data
+### Code: Download GBIF data
 ### Project: Neotropical dry forest bees
 ### Author: Andres Herrera
 
-#Set your working direcoty
+#Set your working directory
 setwd("./NDF_bees_project/Data/Raw/GBIF/")
 
 #Required libraries:
