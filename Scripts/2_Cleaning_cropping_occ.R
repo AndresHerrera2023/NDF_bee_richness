@@ -1,103 +1,216 @@
-### 2. Cleaning the occurrences and cropping in the area of interest ###
+### Code: Occurrences clean
+### Project: Neotropical dry forest bees
+### Author: Andres Herrera
 
-# Installing the required packages and loading the libraries
-install.packages(c("terra", "dplyr", "readr", "tidyr"))
-library(terra)
+#Required libraries:
+library(rgbif)
 library(dplyr)
 library(readr)
 library(tidyr)
+library(terra)
 
-# Setting the working directory (update the path accordingly)
-setwd()  # Specify your working directory here
+#Setting your working Directory:
+setwd("./NDF_bees_project/")
 
-# Concatenating the raw data from GBIF and literature
-
-# Loading GBIF data from CSV files in the specified directory
-gbif <- list.files(path = "./Data/raw_data/gbif_raw_data/", pattern = ".csv$", full.names = TRUE) %>%
-  lapply(read_csv) %>% 
+#Filtering GBIF occurrences by "Preserved_specimen" and "CatalogNumber":
+gbif_merge <- list.files(path="./Data/Raw/GBIF/", pattern = ".csv$",  full.names = T) %>%
+  lapply(read_csv) %>%
   bind_rows
+head(gbif_merge)
 
-# Selecting specific columns from GBIF data
-gbif <- gbif[, c("countryCode", "family", "genus", "species", "decimalLongitude", "decimalLatitude")]
+#Removing human observations from GBIF:
+gbif_basisOfRecord <- gbif_merge[gbif_merge$basisOfRecord == "PRESERVED_SPECIMEN",] 
+nrow(gbif_basisOfRecord)# occ = 741851
 
-# Adding source and reference columns to the GBIF dataset
-gbif$source <- rep("gbif", times = nrow(gbif))
-gbif$reference <- rep("gbif", times = nrow(gbif))
+gbif_catalogNumber <- gbif_basisOfRecord[gbif_basisOfRecord$catalogNumber != "NO APLICA" &  gbif_basisOfRecord$catalogNumber != "NO DISPONIBLE",] 
+nrow(gbif_catalogNumber)# occ = 737212
+
+gbif_catalogNumber_NA <- gbif_catalogNumber[!is.na(gbif_catalogNumber$catalogNumber),] 
+nrow(gbif_catalogNumber_NA)# occ = 697496
+
+#Filtered occurrences from GBIF:
+gbif <- gbif_catalogNumber_NA[,c("countryCode", "family", "genus", "species", "decimalLongitude", "decimalLatitude")]
+source <- rep("gbif", times = length(gbif$genus))
+gbif$source <- source
+cite <- rep("gbif", times = length(gbif$genus))
+gbif$cite <- cite
 head(gbif)
 
-# Loading literature data from CSV files in the specified directory
-literature <- list.files(path = "./Data/raw_data/literature_raw_data/", pattern = ".csv$", full.names = TRUE) %>%
+#Occurrences from papers:
+papers <- list.files(path="./Data/raw/Literature/", pattern = ".csv$", full.names = T)  %>% 
   lapply(read_csv) %>%
   bind_rows 
+papers <- papers[,c("countryCode", "family", "genus", "species", "decimalLongitude", "decimalLatitude", "cite")]
+papers$source <- rep("literature", times = length(papers$genus))
+papers <- papers[,c(1,2,3,4,5,6,8,7)]
+head(papers)
+nrow(papers)
 
-# Selecting specific columns from literature data and adding a source column
-literature <- literature[, c("countryCode", "family", "genus", "species", "decimalLongitude", "decimalLatitude", "reference")]
-literature$source <- rep("literature", times = nrow(literature))
-literature <- literature[, c(1, 2, 3, 4, 5, 6, 8, 7)]
-head(literature)
-
-# Merging the GBIF and literature datasets and replacing missing species with "sp"
-conc <- bind_rows(gbif, literature) %>%
+#Merging the two datasets with "sp":
+conc <- bind_rows(gbif,papers) %>%
   replace_na(list(species = "sp")) %>%
-  write.csv("./Data/raw_data/concatenated_raw_data/concatenated_raw_data.csv", row.names = FALSE)
+  write.csv("./Data/Raw/Merged/raw_merged_occ.csv", row.names=FALSE)
 
-# Cleaning the concatenated data
-# Specify the path to save the cleaned dataset
-Finalnam <- "./Data/clean_data/concatenated_clean_data.csv"
 
-# Reading concatenated data and cleaning it
-occurrences <- read.csv("./Data/raw_data/concatenated_raw_data/concatenated_raw_data.csv")
-colnames(occurrences) <- c("countryCode", "family", "genus", "species", "longitude", "latitude", "source", "reference")
-
-# Creating a unique code for each occurrence and removing duplicates
-occurrences$code <- paste(occurrences$countryCode, occurrences$family, occurrences$genus, occurrences$species, 
-                          occurrences$longitude, occurrences$latitude, occurrences$source, occurrences$reference, sep = "_")
-occurrences <- occurrences[!duplicated(occurrences$code), 1:9]
+#Cleaning duplicates, NAs and 0 coordinates:
+occurrences <- read.csv("./Data/Raw/Merged/raw_merged_occ.csv")
+head(occurrences) # 699907 occ
+nrow(occurrences)
+Finalnam <- paste0("Z:/Andres/NDF_bees_project/Data/Clean/Merged/clean_merged_occ.csv") #create this folder first  in your working directory
+colnames(occurrences) <- c("countryCode", "family", "genus", "species", "longitude", "latitude", "source", "cite")
+occurrences$code <-  paste(occurrences$countryCode, 
+                           occurrences$family, 
+                           occurrences$genus, 
+                           occurrences$species,
+                           occurrences$longitude, 
+                           occurrences$latitude, 
+                           occurrences$source, 
+                           occurrences$cite, sep = "_") 
+occurrences <- occurrences[!duplicated(occurrences$code), 1:9] 
+nrow(occurrences) # 98455 occ
 occurrences <- na.omit(occurrences[, 1:8])
-occurrences <- occurrences[occurrences$longitude != 0 & occurrences$latitude != 0, ]  # Removing records with zero coordinates
+nrow(occurrences) # 96244 occ
+occurrences <- occurrences[occurrences$longitude != 0 & occurrences$latitude != 0, ]
+nrow(occurrences) # 96240 occ
 write.csv(occurrences, Finalnam, row.names = FALSE)
 
-# Cropping occurrences to the area of interest using Dryflor shapefile
-setwd()  # Specify your working directory
-dryflor <- vect("seasonally_dryfo_dis.shp")
-plot(dryflor)
+### Cropping with the two PDs of STDF:
 
-# Reading cleaned occurrences and converting to spatial vector
-occ_clean <- read.csv("./Data/clean_data/concatenated_clean_data.csv")
-occ_clean <- vect(occ_clean, geom = c("longitude", "latitude"), crs = "+proj=longlat +datum=WGS84")
-points(occ_clean)
+#DRYFLOR:
+dryflor <- vect("./Shapefiles/STDF/DRYFLOR/seasonally_dryfo_dis.shp") 
+plot(dryflor, col = "black")
 
-# Cropping occurrences to Dryflor area
-occ_dryflor <- crop(occ_clean, dryflor)
-points(occ_dryflor, col = "darkgreen")
+#TEOW:
+teow <- vect("./Shapefiles/STDF/TEOW/Tropical & Subtropical Dry Broadleaf Forest.shp") 
+plot(teow, col = "black")
 
-# Saving cropped occurrences as a shapefile and CSV
-writeVector(occ_dryflor, "STDF_bees_dryflor.shp", overwrite = TRUE)
+#reading the clean occurrences:
+occ <- read.csv("./Data/Clean/Merged/clean_merged_occ.csv")
+occ <- vect(occ, geom = c("longitude", "latitude"), crs="+proj=longlat +datum=WGS84")
+points(occ, col = "blue")
+
+#Cropping occurrences with PD:
+occ_dryflor <- crop(occ, dryflor)
+points(occ_dryflor, col = "red")
+
+occ_teow <- crop(occ, teow)
+points(occ_teow, col = "green")
+class(occ_teow)
+
+#Saving cropped occurrences as vector:
+
+#DRYFLOR:
+writeVector(occ_dryflor, "./Shapefiles/STDF_bees_occ/dryflor/dryflor_occ.shp", overwrite = TRUE)
+
+#TEOW:
+writeVector(occ_teow, "./Shapefiles/STDF_bees_occ/teow/teow_occ.shp", overwrite = TRUE)
+
+
+#Setting and saving DRYFLOR occurrences as data frame:
 df_dryflor <- as.data.frame(occ_dryflor)
 df_dryflor <- cbind(crds(occ_dryflor), df_dryflor)
-colnames(df_dryflor)[c(1, 2)] <- c("longitude", "latitude")
-total_occ_dryflor <- df_dryflor[, c(3, 1, 2, 4, 5, 6, 7, 8)]
-head(total_occ_dryflor)
-write.csv(total_occ_dryflor[, 6], "./Data/name_validation/dryflor_names.csv", row.names = FALSE)
+colnames(df_dryflor)[c(1,2)] <- c("longitude", "latitude")
+df_dryflor <- df_dryflor[,c(3,1,2,4,5,6,7,8)]
+head(df_dryflor)
+nrow(df_dryflor) # 17885 occ
+write.csv(df_dryflor,"./Data/Names_validation/Unverified_names/dryflor/dryflor_occ.csv", row.names = F)
 
-# Cropping occurrences to another area of interest using WWF TDF shapefile
-setwd()  # Specify your working directory
-teow <- vect("wwf_TDF_neotropics_dis.shp")
-plot(teow)
+#Writing DRYFLOR names for ITIS validation in txt format:
+spnames  <- df_dryflor %>%
+  filter(species != "sp") %>%     
+  distinct(species) %>%           
+  pull(species)  
+spnames <- c("name", spnames)
+writeLines(spnames , "./Data/Names_validation/Unverified_names/dryflor_names.txt")
 
-# Re-reading cleaned occurrences and cropping to TEOW area
-occ_clean <- read.csv("./Data/clean_data/concatenated_clean_data.csv")
-occ_clean <- vect(occ_clean, geom = c("longitude", "latitude"), crs = "+proj=longlat +datum=WGS84")
-points(occ_clean)
+#Names validation using ITIS:
+valid_names <- read.csv("./Data/Names_validation/ITIS_verified_names/dryflor/dryflor_valid_names.csv")
+valid_names <- subset(valid_names, NameUsage == "invalid")
+valid_names <- valid_names[,c(1,3)]
+df_dryflor <- merge(df_dryflor, valid_names, by = "species",all.x = TRUE)
+df_dryflor$species <- ifelse(is.na(df_dryflor$AcceptedName), df_dryflor$species, df_dryflor$AcceptedName)
+total_species_dryflor <- subset(df_dryflor, select = -AcceptedName)
 
-occ_teow <- crop(occ_clean, teow)
-points(occ_teow, col = "yellow")
+#names from ITIS without match (Manually edited):
+manual <- read.csv("./Data/Names_validation/ITIS_verified_names/dryflor/dryflor_manual_valid_names.csv")
 
-# Saving cropped occurrences as a shapefile and CSV
-writeVector(occ_teow, "STDF_bees_teow.shp", overwrite = TRUE)
+#Merging by occurrences:
+occ_manual_names <- merge(total_species_dryflor, manual, by = "species",all.x = TRUE)
+
+#Replacing and saving the names for species:
+occ_manual_names$species <- ifelse(is.na(occ_manual_names$species_final), occ_manual_names$species, occ_manual_names$species_final)
+final_names <- subset(occ_manual_names, select = -species_final)
+head(final_names)
+final_names <- final_names[,c(2,3,4,5,6,1,7,8)] 
+final_names <- final_names %>%
+  filter(species != "remove")
+head(final_names)
+View(final_names)
+nrow(final_names) # 17879 occ
+write.csv(final_names,"./Data/STDF_bees_occ/dryflor/all/dryflor_bees_all_occ.csv", row.names = F)
+
+
+# Filtering to genus level:
+genera <- final_names %>%
+  select(countryCode,longitude, latitude,family,  genus,source, cite) 
+write.csv(genera, "./Data/STDF_bees_occ/dryflor/genera/dryflor_genera_occ.csv", row.names = F)
+
+# Filtering to species level:
+species <- final_names %>%
+  select(countryCode,longitude, latitude,family,  genus,species, source, cite) 
+write.csv(species, "./Data/STDF_bees_occ/dryflor/species/dryflor_species_occ.csv", row.names = F)
+
+#Setting and saving TEOW occurrences as data frame:
 df_teow <- as.data.frame(occ_teow)
 df_teow <- cbind(crds(occ_teow), df_teow)
-colnames(df_teow)[c(1, 2)] <- c("longitude", "latitude")
-total_occ_teow <- df_teow[, c(3, 1, 2, 4, 5, 6, 7, 8)]
-head(total_occ_teow)
-write.csv(total_occ_teow[, 6], "./Data/name_validation/teow_names.csv", row.names = FALSE)
+colnames(df_teow)[c(1,2)] <- c("longitude", "latitude")
+df_teow <- df_teow[,c(3,1,2,4,5,6,7,8)]
+head(df_teow)
+nrow(df_teow) # 15161 occ
+write.csv(df_teow,"./Data/Names_validation/Unverified_names/teow/teow_occ.csv", row.names = F)
+
+#Writing TEOW names for ITIS validation in txt format:
+spnames  <- df_teow %>%
+  filter(species != "sp") %>%     
+  distinct(species) %>%           
+  pull(species)  
+spnames <- c("name", spnames)
+writeLines(spnames , "./Data/Names_validation/Unverified_names/teow/teow_names.txt")
+
+#TEOW names validation using ITIS 
+df_teow <- read.csv("Z:/Andres/NDF_bees_project/Data/Names_validation/Unverified_names/teow/teow_occ.csv")
+valid_names <- read.csv("Z:/Andres/NDF_bees_project/Data/Names_validation/ITIS_verified_names/teow/teow_valid_names.csv")
+
+valid_names <- subset(valid_names, NameUsage == "invalid")
+valid_names <- valid_names[,c(1,3)]
+df_teow <- merge(df_teow, valid_names, by = "species",all.x = TRUE)
+df_teow$species <- ifelse(is.na(df_teow$AcceptedName), df_teow$species, df_teow$AcceptedName)
+total_species_teow <- subset(df_teow, select = -AcceptedName)
+
+#names from ITIS without match. Manually edited:
+manual <- read.csv("Z:/Andres/NDF_bees_project/Data/Names_validation/ITIS_verified_names/teow/teow_manual_valid_names.csv")
+
+#Merging by occurrences:
+occ_manual_names <- merge(total_species_teow, manual, by = "species",all.x = TRUE)
+
+#Replacing and saving the names for species:
+occ_manual_names$species <- ifelse(is.na(occ_manual_names$species_final), occ_manual_names$species, occ_manual_names$species_final)
+final_names <- subset(occ_manual_names, select = -species_final)
+head(final_names)
+final_names <- final_names[,c(2,3,4,5,6,1,7,8)] 
+final_names <- final_names %>%
+  filter(species != "remove")
+head(final_names)
+nrow(final_names) #15141
+write.csv(final_names,"./Data/STDF_bees_occ/teow/all/teow_bees_all_occ.csv", row.names = F)
+
+
+# Filtering to genus level:
+genera <- final_names %>%
+  select(countryCode,longitude, latitude,family,  genus,source, cite) 
+write.csv(genera, "./Data/STDF_bees_occ/teow/genera/teow_genera_occ.csv", row.names = F)
+
+# Filtering to species level:
+species <- final_names %>%
+  select(countryCode,longitude, latitude,family,  genus,species, source, cite) 
+write.csv(species, "./Data/STDF_bees_occ/teow/species/teow_species_occ.csv", row.names = F)
