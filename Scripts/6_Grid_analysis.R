@@ -1,6 +1,8 @@
 ### Code: Grid analysis
 ### Project: Neotropical dry forest bees
-### Author: Andres Herrera
+### Authors: Herrera-Motta et al. 
+### Last update: 08/20/25
+
 
 #Required libraries:
 library(terra)
@@ -9,11 +11,11 @@ library(terra)
 setwd("./NDF_bees_project/")
 
 # Grids 50 km
-spdf50 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/dryflor/species/50/dryflor_pam_species_50.shp")
+spdf50 <- vect("./Shapefiles/PAM/dryflor/species/50/dryflor_pam_species_50.shp")
 
 # Grids with zero species
 spdf50_all <- length(spdf50$Richness) #1576 grids
-spdf50_zero <- length(spdf50[spdf50$Richness == 0]) #876
+spdf50_zero <- length(spdf50[spdf50$Richness == 0]) #955 grids
 spdf50_pct_zero <- (spdf50_zero / spdf50_all) * 100 #60.59%
 
 # Grids with 1-20 species
@@ -36,7 +38,7 @@ sum(spdf50_no_zero_pct, spdf50_20_100_pct, spdf50_gt100_pct) # = 100%
 
 
 # Grids 75 km
-spdf75 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/dryflor/species/75/dryflor_pam_species_75.shp")
+spdf75 <- vect("./Shapefiles/PAM/dryflor/species/75/dryflor_pam_species_75.shp")
 
 # Grids with zero species
 spdf75_all <- length(spdf75$Richness) #818 grids
@@ -62,7 +64,7 @@ spdf75_gt100_pct # 4.19%
 sum(spdf75_no_zero_pct, spdf75_20_100_pct, spdf75_gt100_pct) # = 100%
 
 # Grids 100 km
-spdf100 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/dryflor/species/100/dryflor_pam_species_100.shp")
+spdf100 <- vect("./Shapefiles/PAM/dryflor/species/100/dryflor_pam_species_100.shp")
 
 # Grids with zero species
 spdf100_all <- length(spdf100$Richness) #531 grids
@@ -93,7 +95,7 @@ sum(spdf100_no_zero_pct, spdf100_20_100_pct, spdf100_gt100_pct) # 100%
 #Genera:
 
 # Grids 50 km
-gndf50 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/dryflor/genera/50/dryflor_pam_genera_50.shp")
+gndf50 <- vect("./Shapefiles/PAM/dryflor/genera/50/dryflor_pam_genera_50.shp")
 
 # Grids with zero species
 gndf50_all <- length(gndf50$Richness) # 1576 grids
@@ -119,7 +121,7 @@ gndf50_gt80_pct
 sum(gndf50_1_10_pct, gndf50_10_80_pct, gndf50_gt80_pct) # 100%
 
 # Grids 75 km
-gndf75 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/dryflor/genera/75/dryflor_pam_genera_75.shp")
+gndf75 <- vect("./Shapefiles/PAM/dryflor/genera/75/dryflor_pam_genera_75.shp")
 
 # Grids with zero species
 gndf75_all <- length(gndf75$Richness) # 818 grids
@@ -145,7 +147,7 @@ gndf75_gt80_pct
 sum(gndf75_1_10_pct, gndf75_10_80_pct, gndf75_gt80_pct) # 100%
 
 # Grids 100 km
-gndf100 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/dryflor/genera/100/dryflor_pam_genera_100.shp")
+gndf100 <- vect("./Shapefiles/PAM/dryflor/genera/100/dryflor_pam_genera_100.shp")
 
 # Grids with zero occurrences
 gndf100_all <- length(gndf100$Richness) # 531 grids
@@ -176,7 +178,7 @@ sum(gndf100_1_10_pct, gndf100_10_80_pct, gndf100_gt80_pct) # 100%
 ##Species
 
 # Grids 50 km
-sptw50 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/teow/species/50/teow_pam_species_50.shp")
+sptw50 <- vect("./Shapefiles/PAM/teow/species/50/teow_pam_species_50.shp")
 
 # Grids with zero species
 sptw50_all <- length(sptw50$Richness) # 1475 grids
@@ -202,7 +204,7 @@ sptw50_gt100_pct
 sum(sptw50_1_20_pct, sptw50_20_100_pct, sptw50_gt100_pct) # 100%
 
 # Grids 75 km
-sptw75 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/teow/species/75/teow_pam_species_75.shp")
+sptw75 <- vect("./Shapefiles/PAM/teow/species/75/teow_pam_species_75.shp")
 
 # Grids with zero species
 sptw75_all <- length(sptw75$Richness) # 732 grids
@@ -227,7 +229,7 @@ sptw75_gt100_pct
 sum(sptw75_1_20_pct, sptw75_20_100_pct, sptw75_gt100_pct) # 100%
 
 # Grids 100 km
-sptw100 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/teow/species/100/teow_pam_species_100.shp")
+sptw100 <- vect("./Shapefiles/PAM/teow/species/100/teow_pam_species_100.shp")
 
 # Grids with zero species
 sptw100_all <- length(sptw100$Richness) # 462 grids
@@ -252,7 +254,7 @@ sum(sptw100_1_20_pct, sptw100_20_100_pct, sptw100_gt100_pct) # 100%
 
 ##Genera 
 # Grids 50 km
-gntw50 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/teow/genera/50/teow_pam_genera_50.shp")
+gntw50 <- vect("./Shapefiles/PAM/teow/genera/50/teow_pam_genera_50.shp")
 
 # Grids with zero species
 gntw50_all <- length(gntw50$Richness) # 1475 grids
@@ -275,7 +277,7 @@ gntw50_gt80_pct <- (sum(gntw50_counts[9:10]) / sum(gntw50_counts)) * 100 # 0.37%
 sum(gntw50_1_10_pct, gntw50_10_80_pct, gntw50_gt80_pct) # 100%
 
 # Grids 75 km
-gntw75 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/teow/genera/75/teow_pam_genera_75.shp")
+gntw75 <- vect("./Shapefiles/PAM/teow/genera/75/teow_pam_genera_75.shp")
 
 # Grids with zero species
 gntw75_all <- length(gntw75$Richness) # 732 grids
@@ -298,7 +300,7 @@ gntw75_gt80_pct <- (sum(gntw75_counts[9:10]) / sum(gntw75_counts)) * 100 # 0.82%
 sum(gntw75_1_10_pct, gntw75_10_80_pct, gntw75_gt80_pct) # 100%
 
 # Grids 100 km
-gntw100 <- vect("Z:/Andres/NDF_bees_project/Shapefiles/PAM/teow/genera/100/teow_pam_genera_100.shp")
+gntw100 <- vect("./Shapefiles/PAM/teow/genera/100/teow_pam_genera_100.shp")
 
 # Grids with zero species
 gntw100_all <- length(gntw100$Richness) # 462 grids
