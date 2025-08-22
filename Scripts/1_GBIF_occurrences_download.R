@@ -1,6 +1,7 @@
 ### Code: Download GBIF data
 ### Project: Neotropical dry forest bees
-### Author: Andres Herrera
+### Authors: Herrera-Motta et al. 
+### Last update: 08/20/25
 
 #Set your working directory
 setwd("./NDF_bees_project/Data/Raw/GBIF/")
@@ -136,7 +137,6 @@ write.csv(d_andrenidae, "Melittidae.csv", row.names = FALSE)
 # Once the download has finished, read your data into R. 
 data_download <- occ_download_get(gbif_download_key, overwrite = TRUE) %>%
   occ_download_import()
-
 
 
 
