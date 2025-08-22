@@ -1,17 +1,20 @@
 ### Code: Summary richness 
 ### Project: Neotropical dry forest bees
-### Author: Andres Herrera
+### Authors: Herrera-Motta et al. 
+### Last update: 08/20/25
 
 #Libraries:
 library(dplyr)
 
+setwd("./NDF_bees_project/")
+
 #Occurrences from DRYFLOR:
-total_occ_dryflor <- read.csv("./NDF_bees_project/Data/STDF_bees_occ/dryflor/all/dryflor_bees_all_occ.csv")
+total_occ_dryflor <- read.csv("./Data/STDF_bees_occ/dryflor/all/dryflor_bees_all_occ.csv")
 head(total_occ_dryflor)
 
 #Total number of occurrences:
-n_total_occurrences<-nrow(total_occ_dryflor) #17875
-n_total_occ
+n_total_occ_dryflor <-nrow(total_occ_dryflor) #17875
+n_total_occ_dryflor
 
 #Total number of occurrences from GBIF:
 n_total_occ_gbif <-  nrow(total_occ_dryflor[total_occ_dryflor$source == 'gbif',]) #16299
@@ -40,8 +43,7 @@ number_sp
 fam_occurrences<- total_occ_dryflor %>%
   group_by(family) %>% 
   summarise(total_occurrences= length(species))
-
-fam_occ
+fam_occurrences
 
 #Number of genera per family:
 fam_genus <- total_occ_dryflor %>%
@@ -83,10 +85,10 @@ prop_spfam <- round((sp_occ_no_sp[,2] /sp_occ_sp[,2] * 100), digits=2)
 colnames(prop_spfam) <- "prop ID"
 prop_spfam
 
-summary_family <-cbind(fam_genus, fam_species[,2], fam_occ[,2],prop_spfam)
+summary_family <-cbind(fam_genus, fam_species[,2], fam_occurrences[,2],prop_spfam)
 summary_family
 
-write.csv(summary_family, "Z:/Andres/NDF_bees_project/summary_diversity/dryflor/summary_per_family_dryflor.csv", row.names = F)
+write.csv(summary_family, "./summary_diversity/dryflor/summary_per_family_dryflor.csv", row.names = F)
 
 #Total number of occurrencesper country:
 occ_country <- total_occ_dryflor %>%
@@ -120,7 +122,7 @@ colnames(prop_id) <- "prop ID"
 prop_id
 
 ##Species in protected areas:
-occ_dryflor_pa <- read.csv("Z:/Andres/NDF_bees_project/summary_diversity/dryflor/dryflor_occ_protected_areas.csv")
+occ_dryflor_pa <- read.csv("./summary_diversity/dryflor/dryflor_occ_protected_areas.csv")
 occ_dryflor_pa <- occ_dryflor_pa[occ_dryflor_pa$species != "sp",]
 
 prop_pa_dryflor <- (length(unique(occ_dryflor_pa[,6]))/length(unique(n_unique_species[,6])))*100 #46.53% sp in protected areas
@@ -153,12 +155,12 @@ prop_dryflor_pa
 summary_per_country_dryflor <- cbind(species_country, genus_country[,2],occ_country[,2], prop_id, prop_dryflor_pa)
 summary_per_country_dryflor
 
-write.csv(summary_per_country_dryflor, "Z:/Andres/NDF_bees_project/summary_diversity/dryflor/summary_per_country_dryflor.csv", row.names = F)
+write.csv(summary_per_country_dryflor, "./summary_diversity/dryflor/summary_per_country_dryflor.csv", row.names = F)
 
 ##############__________TEOW______________###########
 
 #Data:
-total_occ_teow <- read.csv("Z:/Andres/NDF_bees_project/Data/STDF_bees_occ/teow/all/teow_bees_all_occ.csv")
+total_occ_teow <- read.csv("./NDF_bees_project/Data/STDF_bees_occ/teow/all/teow_bees_all_occ.csv")
 head(total_occ_teow)
 nrow(total_occ_teow)
 
@@ -240,7 +242,7 @@ prop_spfam_teow
 summary_family_teow <-cbind(fam_genus_teow, fam_species_teow[,2], fam_occ_teow[,2],prop_spfam_teow)
 summary_family_teow
 
-write.csv(summary_family_teow, "Z:/Andres/NDF_bees_project/summary_diversity/teow/summary_per_family_teow.csv", row.names = F)
+write.csv(summary_family_teow, "./summary_diversity/teow/summary_per_family_teow.csv", row.names = F)
 
 #Total number of occurrences per country:
 occ_country_teow <- total_occ_teow %>%
@@ -294,7 +296,7 @@ colnames(prop_teow) <- "prop ID"
 prop_teow
 
 ##Species in protected areas:
-p_occ_teow <- read.csv("Z:/Andres/NDF_bees_project/summary_diversity/teow/teow_occ_protected_areas.csv")
+p_occ_teow <- read.csv("./summary_diversity/teow/teow_occ_protected_areas.csv")
 
 prop_pa_teow <- (length(unique(p_occ_teow[,6]))/length(unique(n_unique_species_teow[,6])))*100 # 38.90
 prop_pa_teow
@@ -322,7 +324,7 @@ occ_protected_areas_teow <- rbind(occ_protected_areas_teow[1:7,],GD, GT, HN,
 
 occ_protected_areas_teow 
 View(occ_protected_areas_teow)
-write.csv(occ_protected_areas_teow, "Z:/Andres/NDF_bees_project/summary_diversity/teow/summary_teow_occ_protected_areas.csv", row.names = F)
+write.csv(occ_protected_areas_teow, "./summary_diversity/teow/summary_teow_occ_protected_areas.csv", row.names = F)
 
 prop_protected_teow <- round((occ_protected_areas_teow[,2] /species_country_teow[,2] * 100), digits=2)
 colnames(prop_protected_teow) <- "prop_protected"
@@ -332,4 +334,4 @@ prop_protected_teow
 summary_per_country_teow <- cbind(species_country_teow, genus_country_teow[,2],occ_country_teow[,2], prop_teow, prop_protected_teow)
 summary_per_country_teow
 
-write.csv(summary_per_country_teow, "Z:/Andres/NDF_bees_project/Summary_diversity/teow/summary_per_country_teow.csv", row.names = F)
+write.csv(summary_per_country_teow, "./Summary_diversity/teow/summary_per_country_teow.csv", row.names = F)
