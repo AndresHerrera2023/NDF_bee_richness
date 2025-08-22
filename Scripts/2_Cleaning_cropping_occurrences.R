@@ -1,6 +1,7 @@
-### Code: Occurrences clean
+### Code: Occurrences cleaning
 ### Project: Neotropical dry forest bees
-### Author: Andres Herrera
+### Authors: Herrera-Motta et al. 
+### Last update: 08/20/25
 
 #Required libraries:
 library(rgbif)
@@ -16,7 +17,8 @@ setwd("./NDF_bees_project/")
 gbif_merge <- list.files(path="./Data/Raw/GBIF/", pattern = ".csv$",  full.names = T) %>%
   lapply(read_csv) %>%
   bind_rows
-head(gbif_merge)
+ head(gbif_merge)
+ nrow(gbif_merge) #877748
 
 #Removing human observations from GBIF:
 gbif_basisOfRecord <- gbif_merge[gbif_merge$basisOfRecord == "PRESERVED_SPECIMEN",] 
@@ -44,7 +46,7 @@ papers <- papers[,c("countryCode", "family", "genus", "species", "decimalLongitu
 papers$source <- rep("literature", times = length(papers$genus))
 papers <- papers[,c(1,2,3,4,5,6,8,7)]
 head(papers)
-nrow(papers)
+nrow(papers) #2411
 
 #Merging the two datasets with "sp":
 conc <- bind_rows(gbif,papers) %>%
@@ -54,9 +56,9 @@ conc <- bind_rows(gbif,papers) %>%
 
 #Cleaning duplicates, NAs and 0 coordinates:
 occurrences <- read.csv("./Data/Raw/Merged/raw_merged_occ.csv")
-head(occurrences) # 699907 occ
+head(occurrences) # 699907 occ  
 nrow(occurrences)
-Finalnam <- paste0("Z:/Andres/NDF_bees_project/Data/Clean/Merged/clean_merged_occ.csv") #create this folder first  in your working directory
+Finalnam <- paste0("./Data/Clean/Merged/clean_merged_occ.csv") #create this folder first  in your working directory
 colnames(occurrences) <- c("countryCode", "family", "genus", "species", "longitude", "latitude", "source", "cite")
 occurrences$code <-  paste(occurrences$countryCode, 
                            occurrences$family, 
@@ -166,7 +168,7 @@ df_teow <- cbind(crds(occ_teow), df_teow)
 colnames(df_teow)[c(1,2)] <- c("longitude", "latitude")
 df_teow <- df_teow[,c(3,1,2,4,5,6,7,8)]
 head(df_teow)
-nrow(df_teow) # 15161 occ
+nrow(df_teow) # 13614
 write.csv(df_teow,"./Data/Names_validation/Unverified_names/teow/teow_occ.csv", row.names = F)
 
 #Writing TEOW names for ITIS validation in txt format:
@@ -178,8 +180,8 @@ spnames <- c("name", spnames)
 writeLines(spnames , "./Data/Names_validation/Unverified_names/teow/teow_names.txt")
 
 #TEOW names validation using ITIS 
-df_teow <- read.csv("Z:/Andres/NDF_bees_project/Data/Names_validation/Unverified_names/teow/teow_occ.csv")
-valid_names <- read.csv("Z:/Andres/NDF_bees_project/Data/Names_validation/ITIS_verified_names/teow/teow_valid_names.csv")
+df_teow <- read.csv("./Data/Names_validation/Unverified_names/teow/teow_occ.csv")
+valid_names <- read.csv("./Data/Names_validation/ITIS_verified_names/teow/teow_valid_names.csv")
 
 valid_names <- subset(valid_names, NameUsage == "invalid")
 valid_names <- valid_names[,c(1,3)]
@@ -188,7 +190,7 @@ df_teow$species <- ifelse(is.na(df_teow$AcceptedName), df_teow$species, df_teow$
 total_species_teow <- subset(df_teow, select = -AcceptedName)
 
 #names from ITIS without match. Manually edited:
-manual <- read.csv("Z:/Andres/NDF_bees_project/Data/Names_validation/ITIS_verified_names/teow/teow_manual_valid_names.csv")
+manual <- read.csv("./Data/Names_validation/ITIS_verified_names/teow/teow_manual_valid_names.csv")
 
 #Merging by occurrences:
 occ_manual_names <- merge(total_species_teow, manual, by = "species",all.x = TRUE)
@@ -201,7 +203,7 @@ final_names <- final_names[,c(2,3,4,5,6,1,7,8)]
 final_names <- final_names %>%
   filter(species != "remove")
 head(final_names)
-nrow(final_names) #15141
+nrow(final_names) #13595
 write.csv(final_names,"./Data/STDF_bees_occ/teow/all/teow_bees_all_occ.csv", row.names = F)
 
 
@@ -214,3 +216,4 @@ write.csv(genera, "./Data/STDF_bees_occ/teow/genera/teow_genera_occ.csv", row.na
 species <- final_names %>%
   select(countryCode,longitude, latitude,family,  genus,species, source, cite) 
 write.csv(species, "./Data/STDF_bees_occ/teow/species/teow_species_occ.csv", row.names = F)
+
