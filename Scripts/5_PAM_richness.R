@@ -1,7 +1,7 @@
 ### Code: Create a presence-absence matrix to calculate richness per grid
 ### Project: Neotropical dry forest bees
 ### Authors: Herrera-Motta et al. 
-### Last update: 08/20/25
+### Last update: 09/11/25
 
 #Required libraries:
 if(!require(remotes)){
@@ -26,7 +26,8 @@ region <- vect("./Shapefiles/STDF/dryflor/seasonally_dryfo_dis.shp")
 plot(region)
 
 #DRYFLOR occurrences:
-occ_species <- read.csv("./Data/STDF_bees_occ/dryflor/species/dryflor_species_occ.csv")
+occ_species <- read.csv("./Data/STDF_bees_occ/dryflor/all/dryflor_bees_final_occ.csv")
+occ_species <- occ_species[occ_species$species != "sp",]
 head(occ_species)
 occ_species <- occ_species %>% select(longitude,latitude,species) 
 colnames(occ_species)[c(1,2,3)]<- c("Longitude","Latitude","Species")
@@ -61,11 +62,9 @@ writeVector(pam_rich, "./Shapefiles/PAM/dryflor/species/100/dryflor_pam_species_
 
 #####___Genera___####
 
-occ_genus <- read.csv("./Data/STDF_bees_occ/dryflor/genera/dryflor_genera_occ.csv")
-head(occ_genus)
+occ_genus <- read.csv("./Data/STDF_bees_occ/dryflor/all/dryflor_bees_final_occ.csv")
 occ_genus <- occ_genus %>% select(longitude,latitude,genus) 
 colnames(occ_genus)[c(1,2,3)]<- c("Longitude","Latitude","Species")
-
 
 #Grids 50 km:
 b_pam_genus_50 <- prepare_base_PAM(data = occ_genus[,c(1,2,3)], region = region, 
@@ -102,7 +101,8 @@ region <- vect("./Shapefiles/STDF/teow/Tropical & Subtropical Dry Broadleaf Fore
 plot(region)
 
 #Species
-occ_species <- read.csv("./Data/STDF_bees_occ/teow/species/teow_species_occ.csv")
+occ_species <- read.csv("./Data/STDF_bees_occ/teow/all/teow_bees_final_occ.csv")
+occ_species <- occ_species[occ_species$species != "sp",]
 head(occ_species)
 occ_species <- occ_species %>% select(longitude,latitude,species) 
 colnames(occ_species)[c(1,2,3)]<- c("Longitude","Latitude","Species")
@@ -141,7 +141,7 @@ region <- vect("./Shapefiles/STDF/teow/Tropical & Subtropical Dry Broadleaf Fore
 plot(region)
 
 #Genera
-occ_genus <- read.csv("./Data/STDF_bees_occ/teow/genera/teow_genera_occ.csv")
+occ_genus <- read.csv("./Data/STDF_bees_occ/teow/all/teow_bees_final_occ.csv")
 head(occ_genus)
 occ_genus <- occ_genus %>% select(longitude,latitude, genus) 
 colnames(occ_genus)[c(1,2,3)]<- c("Longitude","Latitude","Species")
@@ -173,3 +173,4 @@ pamin <- b_pam_genus_100$PAM
 pamin$Richness <- b_pam_genus_100$PAM_indices$Richness
 pamin$Richness_n <- b_pam_genus_100$PAM_indices$Richness_normalized
 writeVector(pamin, "./Shapefiles/PAM/teow/genera/100/teow_pam_genera_100.shp", overwrite = TRUE)
+
