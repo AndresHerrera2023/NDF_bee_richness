@@ -1,7 +1,7 @@
 ### Code: Download GBIF data
 ### Project: Neotropical dry forest bees
 ### Authors: Herrera-Motta et al. 
-### Last update: 08/20/25
+### Last update: 09/11/25
 
 #Set your working directory
 setwd("./NDF_bees_project/Data/Raw/GBIF/")
@@ -117,29 +117,6 @@ d_andrenidae <- occ_download_get("0011831-250402121839773") %>%
 write.csv(d_andrenidae, "Andrenidae.csv", row.names = FALSE)
 
 
-#MELITTIDAE
-gbif_download_key = occ_download(
-  pred("taxonKey", Melittidae), # insert taxon key for the taxon interested in
-  pred_in("gadm",GADM_ids),
-  pred("hasCoordinate", TRUE),
-  pred("hasGeospatialIssue", FALSE),
-  format = "SIMPLE_CSV",
-  user = "", 
-  pwd = "", 
-  email = ""
-)
-occ_download_wait(gbif_download_key)
-print(gbif_download_key)
-d_andrenidae <- occ_download_get("0011859-250402121839773") %>%
-  occ_download_import()
-write.csv(d_andrenidae, "Melittidae.csv", row.names = FALSE)
-
 # Once the download has finished, read your data into R. 
 data_download <- occ_download_get(gbif_download_key, overwrite = TRUE) %>%
   occ_download_import()
-
-
-
-
-
-
