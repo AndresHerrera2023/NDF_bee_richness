@@ -15,7 +15,6 @@ Halictidae <- name_backbone(name="Halictidae", rank="family") $ usageKey
 Megachilidae <- name_backbone(name="Megachilidae", rank="family") $ usageKey  
 Colletidae <- name_backbone(name="Colletidae", rank="family") $ usageKey  
 Andrenidae <- name_backbone(name="Andrenidae", rank="family") $ usageKey  
-Melittidae <- name_backbone(name="Melittidae", rank="family") $ usageKey  
 
 # List GADM_GID for each state or country we need data for:
 GADM_ids <-c("ARG", "BHS", "BLZ", "BOL", "BRA", "BRB", "CHL", "COL", "CRI", "CUB", "DMA", "DOM",
