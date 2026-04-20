@@ -47,8 +47,6 @@ download_gbif_data <- function(taxon_key, output_file, download_id) {
     pred("hasCoordinate", TRUE),       # Only records with coordinates
     pred("hasGeospatialIssue", FALSE), # Exclude problematic records
     format = "SIMPLE_CSV",
-    
-    # ⚠️ IMPORTANT: Never upload real credentials to GitHub
     user = "YOUR_USERNAME", 
     pwd = "YOUR_PASSWORD", 
     email = "YOUR_EMAIL"
