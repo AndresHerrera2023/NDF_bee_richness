@@ -1,121 +1,92 @@
-### Code: Download GBIF data
-### Project: Neotropical dry forest bees
-### Authors: Herrera-Motta et al. 
-### Last update: 09/11/25
+# ============================================================
+# Script: Download bee occurrence data from GBIF
+# Author: Andres F. Herrera-Motta
+# Description:
+# This script retrieves occurrence records for several bee
+# families (Hymenoptera: Apoidea) from GBIF using the rgbif package.
+# ============================================================
 
-#Set your working directory
-setwd("./NDF_bees_project/Data/Raw/GBIF/")
-
-#Required libraries:
+# Load required libraries
 library(rgbif)
+library(dplyr)  # required for the pipe operator %>%
 
-# Get GBIF keys for family
-Apidae <- name_backbone(name="Apidae", rank="family") $ usageKey  #Add your taxon
-Halictidae <- name_backbone(name="Halictidae", rank="family") $ usageKey  
-Megachilidae <- name_backbone(name="Megachilidae", rank="family") $ usageKey  
-Colletidae <- name_backbone(name="Colletidae", rank="family") $ usageKey  
-Andrenidae <- name_backbone(name="Andrenidae", rank="family") $ usageKey  
+# ------------------------------------------------------------
+# 1. Retrieve GBIF taxonKeys for each bee family
+# ------------------------------------------------------------
+# These keys uniquely identify taxa in the GBIF database
 
-# List GADM_GID for each state or country we need data for:
-GADM_ids <-c("ARG", "BHS", "BLZ", "BOL", "BRA", "BRB", "CHL", "COL", "CRI", "CUB", "DMA", "DOM",
-  "ECU", "SLV", "GUF", "GTM", "GUY", "HTI", "HND", "JAM", "MEX", "NIC", "PAN", "PRY",
-  "PER", "PRI", "SUR", "TTO", "URY", "VEN", "AIA", "ATG", "CYM", "GRD", "MTQ", "MSR",
-  "KNA", "LCA", "VCT", "TCA")
+Apidae       <- name_backbone(name = "Apidae",       rank = "family")$usageKey
+Halictidae   <- name_backbone(name = "Halictidae",   rank = "family")$usageKey  
+Megachilidae <- name_backbone(name = "Megachilidae", rank = "family")$usageKey  
+Colletidae   <- name_backbone(name = "Colletidae",   rank = "family")$usageKey  
+Andrenidae   <- name_backbone(name = "Andrenidae",   rank = "family")$usageKey  
 
-# Perform a download for your desired taxon and retrieve a download key. 
-# You can set download filter parameters using pred_in and pred functions
+# ------------------------------------------------------------
+# 2. Define geographic scope using GADM country codes
+# ------------------------------------------------------------
+# Includes Latin America and Caribbean countries
 
-#APIDAE
-gbif_download_key = occ_download(
-  pred("taxonKey", Apidae), # insert taxon key for the taxon interested in
-  pred_in("gadm",GADM_ids),
-  pred("hasCoordinate", TRUE),
-  pred("hasGeospatialIssue", FALSE),
-  format = "SIMPLE_CSV",
-  user = "", 
-  pwd = "", 
-  email = ""
-)
-print(gbif_download_key)
-
-
-d_apidae <- occ_download_get("0011676-250402121839773") %>%
-  occ_download_import()
-write.csv(d_apidae, "Apidae.csv", row.names = FALSE)
-
-#HALICTIDAE
-gbif_download_key = occ_download(
-  pred("taxonKey", Halictidae), # insert taxon key for the taxon interested in
-  pred_in("gadm",GADM_ids),
-  pred("hasCoordinate", TRUE),
-  pred("hasGeospatialIssue", FALSE),
-  format = "SIMPLE_CSV",
-  user = "", 
-  pwd = "", 
-  email = ""
+GADM_ids <- c(
+  "ARG","BHS","BLZ","BOL","BRA","BRB","CHL","COL","CRI","CUB","DMA","DOM",
+  "ECU","SLV","GUF","GTM","GUY","HTI","HND","JAM","MEX","NIC","PAN","PRY",
+  "PER","PRI","SUR","TTO","URY","VEN","AIA","ATG","CYM","GRD","MTQ","MSR",
+  "KNA","LCA","VCT","TCA"
 )
 
-print(gbif_download_key)
+# ------------------------------------------------------------
+# 3. Helper function to download GBIF data by taxon
+# ------------------------------------------------------------
+# This avoids repeating the same code for each family
 
-d_halictidae <- occ_download_get("0011699-250402121839773") %>%    
-  occ_download_import()
-write.csv(d_halictidae, "Halictidae.csv", row.names = FALSE)
+download_gbif_data <- function(taxon_key, output_file, download_id) {
+  
+  # Request download from GBIF
+  gbif_download_key <- occ_download(
+    pred("taxonKey", taxon_key),       # Filter by taxon
+    pred_in("gadm", GADM_ids),         # Filter by region
+    pred("hasCoordinate", TRUE),       # Only records with coordinates
+    pred("hasGeospatialIssue", FALSE), # Exclude problematic records
+    format = "SIMPLE_CSV",
+    
+    # ⚠️ IMPORTANT: Never upload real credentials to GitHub
+    user = "YOUR_USERNAME", 
+    pwd = "YOUR_PASSWORD", 
+    email = "YOUR_EMAIL"
+  )
+  
+  print(gbif_download_key)
+  
+  # Retrieve and import the dataset using a known download ID
+  data <- occ_download_get(download_id) %>%
+    occ_download_import()
+  
+  # Save data to CSV file
+  write.csv(data, output_file, row.names = FALSE)
+}
 
-#MEGACHILIDAE
-gbif_download_key = occ_download(
-  pred("taxonKey", Megachilidae), # insert taxon key for the taxon interested in
-  pred_in("gadm",GADM_ids),
-  pred("hasCoordinate", TRUE),
-  pred("hasGeospatialIssue", FALSE),
-  format = "SIMPLE_CSV",
-  user = "", 
-  pwd = "", 
-  email = ""
-)
+# ------------------------------------------------------------
+# 4. Download datasets for each bee family
+# ------------------------------------------------------------
 
-print(gbif_download_key)
+# Apidae
+download_gbif_data(Apidae, "Apidae.csv", "0055711-260226173443078")
 
-d_megachilidae <- occ_download_get("0011716-250402121839773") %>%
-  occ_download_import()
-write.csv(d_megachilidae, "Megachilidae.csv", row.names = FALSE)
+# Halictidae
+download_gbif_data(Halictidae, "Halictidae.csv", "0055895-260226173443078")
 
-#COLLETIDAE
-gbif_download_key = occ_download(
-  pred("taxonKey", Colletidae), # insert taxon key for the taxon interested in
-  pred_in("gadm",GADM_ids),
-  pred("hasCoordinate", TRUE),
-  pred("hasGeospatialIssue", FALSE),
-  format = "SIMPLE_CSV",
-  user = "", 
-  pwd = "", 
-  email = ""
-)
-print(gbif_download_key)
+# Megachilidae
+download_gbif_data(Megachilidae, "Megachilidae.csv", "0055956-260226173443078")
 
-d_colletidae <- occ_download_get("0011780-250402121839773") %>%
-  occ_download_import()
-write.csv(d_colletidae, "Colletidae.csv", row.names = FALSE)
+# Colletidae
+download_gbif_data(Colletidae, "Colletidae.csv", "0011780-250402121839773")
 
+# Andrenidae
+download_gbif_data(Andrenidae, "Andrenidae.csv", "0056225-260226173443078")
 
-#ANDRENIDAE
-gbif_download_key = occ_download(
-  pred("taxonKey", Andrenidae), # insert taxon key for the taxon interested in
-  pred_in("gadm",GADM_ids),
-  pred("hasCoordinate", TRUE),
-  pred("hasGeospatialIssue", FALSE),
-  format = "SIMPLE_CSV",
-  user = "", 
-  pwd = "", 
-  email = ""
-)
+# ------------------------------------------------------------
+# 5. Optional: retrieve last download using its key
+# ------------------------------------------------------------
+# This step can be used to re-import the most recent request
 
-print(gbif_download_key)
-
-d_andrenidae <- occ_download_get("0011831-250402121839773") %>%
-  occ_download_import()
-write.csv(d_andrenidae, "Andrenidae.csv", row.names = FALSE)
-
-
-# Once the download has finished, read your data into R. 
 data_download <- occ_download_get(gbif_download_key, overwrite = TRUE) %>%
   occ_download_import()
