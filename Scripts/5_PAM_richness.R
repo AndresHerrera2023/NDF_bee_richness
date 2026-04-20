@@ -1,176 +1,148 @@
-### Code: Create a presence-absence matrix to calculate richness per grid
-### Project: Neotropical dry forest bees
-### Authors: Herrera-Motta et al. 
-### Last update: 09/11/25
+# ============================================================
+# Script: Species and genus richness (PAM) analysis
+# Project: Neotropical dry forest bees
+# Author: [Your Name]
+# Description:
+# This script generates presence–absence matrices (PAMs) and
+# calculates species and genus richness across multiple spatial
+# resolutions (50, 75, and 100 km grids) for both DRYFLOR and
+# TEOW regions using the biosurvey package.
+# ============================================================
 
-#Required libraries:
+# Required libraries:
 if(!require(remotes)){
   install.packages("remotes")
 }
 
-# To install the package use
-remotes::install_github("claununez/biosurvey", force = T)
-
-# To install the package and its vignettes use (if needed use: force = TRUE)  
+# Install biosurvey package (if needed)
+remotes::install_github("claununez/biosurvey", force = TRUE)
 remotes::install_github("claununez/biosurvey", build_vignettes = TRUE)
 
-#Libraries
+# Libraries
 library(biosurvey)
 library(terra)
+library(dplyr)
 
-# Establishing working directory
-setwd("./NDF_bees_project/")
+# Set working directory
+setwd("./NDF_bees_project/2026_version/")
 
-# DRYFLOR PD:
+# ============================================================
+# DRYFLOR
+# ============================================================
+
+# Region of interest
 region <- vect("./Shapefiles/STDF/dryflor/seasonally_dryfo_dis.shp")
 plot(region)
 
-#DRYFLOR occurrences:
-occ_species <- read.csv("./Data/STDF_bees_occ/dryflor/all/dryflor_bees_final_occ.csv")
+# Species occurrences
+occ_species <- read.csv("./Data/STDF_bees_occ/dryflor/dryflor_bees_final_occ.csv")
 occ_species <- occ_species[occ_species$species != "sp",]
-head(occ_species)
-occ_species <- occ_species %>% select(longitude,latitude,species) 
-colnames(occ_species)[c(1,2,3)]<- c("Longitude","Latitude","Species")
+occ_species <- occ_species %>% select(longitude, latitude, species)
+colnames(occ_species) <- c("Longitude","Latitude","Species")
 
-#Grids 50 km:
-b_pam_species_50 <- prepare_base_PAM(data = occ_species[,c(1,2,3)], region = region, 
-                                     cell_size = 50, indices = "all") 
-summary(b_pam_species_50)
+# ---- Species richness ----
+
+# 50 km grid
+b_pam_species_50 <- prepare_base_PAM(
+  data = occ_species,
+  region = region,
+  cell_size = 50,
+  indices = "all"
+)
 pamin <- b_pam_species_50$PAM
 pamin$Richness <- b_pam_species_50$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/dryflor/species/50/dryflor_pam_species_50.shp", overwrite = TRUE)
+writeVector(pamin[,c("Longitude","Latitude","Richness")],
+            "./Shapefiles/PAM/dryflor/species/50/dryflor_pam_species_50.shp",
+            overwrite = TRUE)
 
-#Grids 75 km:
-b_pam_species_75 <- prepare_base_PAM(data = occ_species[,c(1,2,3)], region = region, 
-                                     cell_size = 75, indices = "all") 
-summary(b_pam_species_75)
+# 75 km grid
+b_pam_species_75 <- prepare_base_PAM(occ_species, region, 75, indices = "all")
 pamin <- b_pam_species_75$PAM
 pamin$Richness <- b_pam_species_75$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/dryflor/species/75/dryflor_pam_species_75.shp", overwrite = TRUE)
+writeVector(pamin[,c("Longitude","Latitude","Richness")],
+            "./Shapefiles/PAM/dryflor/species/75/dryflor_pam_species_75.shp",
+            overwrite = TRUE)
 
-#Grids 100 km:
-b_pam_species_100 <- prepare_base_PAM(data = occ_species[,c(1,2,3)], region = region, 
-                                      cell_size = 100, indices = "all") 
-summary(b_pam_species_100)
+# 100 km grid
+b_pam_species_100 <- prepare_base_PAM(occ_species, region, 100, indices = "all")
 pamin <- b_pam_species_100$PAM
 pamin$Richness <- b_pam_species_100$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/dryflor/species/100/dryflor_pam_species_100.shp", overwrite = TRUE)
+writeVector(pamin[,c("ID","Longitude","Latitude","Richness")],
+            "./Shapefiles/PAM/dryflor/species/100/dryflor_pam_species_100.shp",
+            overwrite = TRUE)
 
+# ---- Genus richness ----
 
-#####___Genera___####
+occ_genus <- read.csv("./Data/STDF_bees_occ/dryflor/dryflor_bees_final_occ.csv") %>%
+  select(longitude, latitude, genus)
+colnames(occ_genus) <- c("Longitude","Latitude","Species")
 
-occ_genus <- read.csv("./Data/STDF_bees_occ/dryflor/all/dryflor_bees_final_occ.csv")
-occ_genus <- occ_genus %>% select(longitude,latitude,genus) 
-colnames(occ_genus)[c(1,2,3)]<- c("Longitude","Latitude","Species")
-
-#Grids 50 km:
-b_pam_genus_50 <- prepare_base_PAM(data = occ_genus[,c(1,2,3)], region = region, 
-                                   cell_size = 50, indices = "all") 
-summary(b_pam_genus_50)
+# 50 km
+b_pam_genus_50 <- prepare_base_PAM(occ_genus, region, 50, indices = "all")
 pamin <- b_pam_genus_50$PAM
 pamin$Richness <- b_pam_genus_50$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
 writeVector(pamin, "./Shapefiles/PAM/dryflor/genera/50/dryflor_pam_genera_50.shp", overwrite = TRUE)
 
-#Grids 75 km:
-b_pam_genus_75 <- prepare_base_PAM(data = occ_genus[, c(1,2,3)], region = region, 
-                                   cell_size = 75, indices = "all") 
-summary(b_pam_genus_75)
+# 75 km
+b_pam_genus_75 <- prepare_base_PAM(occ_genus, region, 75, indices = "all")
 pamin <- b_pam_genus_75$PAM
 pamin$Richness <- b_pam_genus_75$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/dryflor/genera/75/dryflor_pam_genera_75.shp", overwrite = TRUE)
+writeVector(pamin, "./Shapefiles/PAM/dryflor/genera/75/dryflor_pam_genera_75.shp", overwrite = TRUE)
 
-#Grids 100 km:
-b_pam_genus_100 <- prepare_base_PAM(data = occ_genus[, c(1,2,3)], region = region, 
-                                    cell_size = 100, indices = "all") 
-summary(b_pam_genus_100)
+# 100 km
+b_pam_genus_100 <- prepare_base_PAM(occ_genus, region, 100, indices = "all")
 pamin <- b_pam_genus_100$PAM
 pamin$Richness <- b_pam_genus_100$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
 writeVector(pamin, "./Shapefiles/PAM/dryflor/genera/100/dryflor_pam_genera_100.shp", overwrite = TRUE)
 
+# ============================================================
+# TEOW
+# ============================================================
 
-############################## TEOW ###############################
-
-# Reading region of interest
-region <- vect("./Shapefiles/STDF/teow/Tropical & Subtropical Dry Broadleaf Forest.shp")
+region <- vect("./Shapefiles/STDF/teow/teow.shp")
 plot(region)
 
-#Species
-occ_species <- read.csv("./Data/STDF_bees_occ/teow/all/teow_bees_final_occ.csv")
+# Species
+occ_species <- read.csv("./Data/STDF_bees_occ/teow/teow_bees_final_occ.csv")
 occ_species <- occ_species[occ_species$species != "sp",]
-head(occ_species)
-occ_species <- occ_species %>% select(longitude,latitude,species) 
-colnames(occ_species)[c(1,2,3)]<- c("Longitude","Latitude","Species")
+occ_species <- occ_species %>% select(longitude, latitude, species)
+colnames(occ_species) <- c("Longitude","Latitude","Species")
 
-#Grids 50 km:
-b_pam_species_50 <- prepare_base_PAM(data = occ_species[,c(1,2,3)], region = region, 
-                                     cell_size = 50, indices = "all") 
-summary(b_pam_species_50)
+# 50 km
+b_pam_species_50 <- prepare_base_PAM(occ_species, region, 50, indices = "all")
 pamin <- b_pam_species_50$PAM
 pamin$Richness <- b_pam_species_50$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/teow/species/50/teow_pam_species_50.shp", overwrite = TRUE)
+writeVector(pamin, "./Shapefiles/PAM/teow/species/50/teow_pam_species_50.shp", overwrite = TRUE)
 
-#Grids 75 km:
-b_pam_species_75 <- prepare_base_PAM(data = occ_species[,c(1,2,3)], region = region, 
-                                     cell_size = 75, indices = "all") 
-summary(b_pam_species_75)
+# 75 km
+b_pam_species_75 <- prepare_base_PAM(occ_species, region, 75, indices = "all")
 pamin <- b_pam_species_75$PAM
 pamin$Richness <- b_pam_species_75$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/teow/species/75/teow_pam_species_75.shp", overwrite = TRUE)
+writeVector(pamin, "./Shapefiles/PAM/teow/species/75/teow_pam_species_75.shp", overwrite = TRUE)
 
-#Grids 100 km:
-b_pam_species_100 <- prepare_base_PAM(data = occ_species[,c(1,2,3)], region = region, 
-                                      cell_size = 100, indices = "all") 
-summary(b_pam_species_100)
+# 100 km
+b_pam_species_100 <- prepare_base_PAM(occ_species, region, 100, indices = "all")
 pamin <- b_pam_species_100$PAM
 pamin$Richness <- b_pam_species_100$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pam_rich, "./Shapefiles/PAM/teow/species/100/teow_pam_species_100.shp", overwrite = TRUE)
+writeVector(pamin, "./Shapefiles/PAM/teow/species/100/teow_pam_species_100.shp", overwrite = TRUE)
 
-#####___Genera___####
+# ---- Genus ----
 
-# Reading region of interest
-region <- vect("./Shapefiles/STDF/teow/Tropical & Subtropical Dry Broadleaf Forest.shp")
-plot(region)
+occ_genus <- read.csv("./Data/STDF_bees_occ/teow/teow_bees_final_occ.csv") %>%
+  select(longitude, latitude, genus)
+colnames(occ_genus) <- c("Longitude","Latitude","Species")
 
-#Genera
-occ_genus <- read.csv("./Data/STDF_bees_occ/teow/all/teow_bees_final_occ.csv")
-head(occ_genus)
-occ_genus <- occ_genus %>% select(longitude,latitude, genus) 
-colnames(occ_genus)[c(1,2,3)]<- c("Longitude","Latitude","Species")
+# 50 km
+b_pam_genus_50 <- prepare_base_PAM(occ_genus, region, 50, indices = "all")
+writeVector(b_pam_genus_50$PAM, "./Shapefiles/PAM/teow/genera/50/teow_pam_genera_50.shp", overwrite = TRUE)
 
+# 75 km
+b_pam_genus_75 <- prepare_base_PAM(occ_genus, region, 75, indices = "all")
+writeVector(b_pam_genus_75$PAM, "./Shapefiles/PAM/teow/genera/75/teow_pam_genera_75.shp", overwrite = TRUE)
 
-#Grids 50 km:
-b_pam_genus_50 <- prepare_base_PAM(data = occ_genus[,c(1,2,3)], region = region, 
-                                   cell_size = 50, indices = "all") 
-summary(b_pam_genus_50)
-pamin <- b_pam_genus_50$PAM
-pamin$Richness <- b_pam_genus_50$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pamin, "./Shapefiles/PAM/teow/genera/50/teow_pam_genera_50.shp", overwrite = TRUE)
-
-#Grids 75 km:
-b_pam_genus_75 <- prepare_base_PAM(data = occ_genus[, c(1,2,3)], region = region, 
-                                   cell_size = 75, indices = "all") 
-summary(b_pam_genus_75)
-pamin <- b_pam_genus_75$PAM
-pamin$Richness <- b_pam_genus_75$PAM_indices$Richness
-pam_rich <- pamin[,c("ID","Longitude","Latitude","Richness")]
-writeVector(pamin, "./Shapefiles/PAM/teow/genera/75/teow_pam_genera_75.shp", overwrite = TRUE)
-
-#Grids 100 km:
-b_pam_genus_100 <- prepare_base_PAM(data = occ_genus[, c(1,2,3)], region = region, 
-                                    cell_size = 100, indices = "all") 
-summary(b_pam_genus_100)
+# 100 km
+b_pam_genus_100 <- prepare_base_PAM(occ_genus, region, 100, indices = "all")
 pamin <- b_pam_genus_100$PAM
 pamin$Richness <- b_pam_genus_100$PAM_indices$Richness
 pamin$Richness_n <- b_pam_genus_100$PAM_indices$Richness_normalized
 writeVector(pamin, "./Shapefiles/PAM/teow/genera/100/teow_pam_genera_100.shp", overwrite = TRUE)
-
