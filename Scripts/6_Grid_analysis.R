@@ -1,7 +1,7 @@
 # ============================================================
 # Script: Grid richness distribution and sampling density analysis
 # Project: Neotropical dry forest bees
-# Author: [Your Name]
+# Author: Herrera-Motta et al.
 # Description:
 # This script analyzes species and genus richness distributions
 # across spatial grids (50, 75, and 100 km) for DRYFLOR and TEOW.
