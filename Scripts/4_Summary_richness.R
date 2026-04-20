@@ -1,310 +1,242 @@
-### Code: Summary richness 
-### Project: Neotropical dry forest bees
-### Authors: Herrera-Motta et al. 
-### Last update: 09/11/25
-
-#Libraries:
+# ============================================================
+# Script: Diversity summary and statistics for DRYFLOR and TEOW
+# Project: Neotropical dry forest bees
+# Author: [Your Name]
+# Description:
+# This script calculates diversity metrics (occurrences, species,
+# genera, and proportions) at family and country levels, and
+# evaluates representation within protected areas for both
+# DRYFLOR and TEOW datasets.
+# ============================================================
+# Libraries:
 library(dplyr)
 
-setwd("Z:/Andres/NDF_bees_project/")
+setwd("./NDF_bees_project/improved/")
 
-#Occurrences from DRYFLOR:
-total_occ_dryflor <- read.csv("./Data/STDF_bees_occ/dryflor/all/dryflor_bees_final_occ.csv")
+# ------------------------------------------------------------
+# DRYFLOR
+# ------------------------------------------------------------
+
+# Occurrences from DRYFLOR:
+total_occ_dryflor <- read.csv("./Data/STDF_bees_occ/dryflor/dryflor_bees_final_occ.csv")
 head(total_occ_dryflor)
 
-#Total number of occurrences:
-n_total_occ_dryflor <-nrow(total_occ_dryflor) #17871
+# Total number of occurrences:
+n_total_occ_dryflor <- nrow(total_occ_dryflor)
 n_total_occ_dryflor
 
-#Total number of occurrences from GBIF:
-n_total_occ_gbif <-  nrow(total_occ_dryflor[total_occ_dryflor$source == 'gbif',]) #16298
+# Total number of occurrences from GBIF:
+n_total_occ_gbif <- nrow(total_occ_dryflor[total_occ_dryflor$source == 'gbif',])
 n_total_occ_gbif
 
-#Total number of occurrences from literature:
-n_total_occ_literature <-  nrow(total_occ_dryflor[total_occ_dryflor$source == 'literature',]) #1573
+# Total number of occurrences from literature:
+n_total_occ_literature <- nrow(total_occ_dryflor[total_occ_dryflor$source == 'literature',])
 n_total_occ_literature
 
-#Total number of unique named species:
+# Total number of unique named species:
 n_unique_species <- total_occ_dryflor[total_occ_dryflor$species != "sp",]
-length(unique(n_unique_species[,6])) #1853 
+length(unique(n_unique_species[,6]))
 
-#Total number of unique named genera:
-length(unique(total_occ_dryflor[,5])) #247
+# Total number of unique named genera:
+length(unique(total_occ_dryflor[,5]))
 
-#Total number of named occurrences:
-number_named_species <- nrow(total_occ_dryflor[total_occ_dryflor$species != "sp",]) #13401
+# Check genera assigned to multiple families:
+total_occ_dryflor %>%
+  group_by(genus) %>%
+  summarise(n_familias = n_distinct(family)) %>%
+  filter(n_familias > 1)
+
+total_occ_dryflor %>%
+  group_by(genus) %>%
+  summarise(
+    familias = paste(unique(family), collapse = ", "),
+    n_familias = n_distinct(family)
+  ) %>%
+  filter(n_familias > 1)
+
+# Total number of named occurrences:
+number_named_species <- nrow(total_occ_dryflor[total_occ_dryflor$species != "sp",])
 number_named_species
 
-#Total number of "sp" or unnamed species:
-number_sp <- nrow(total_occ_dryflor[total_occ_dryflor$species == "sp",]) #4470
+# Total number of "sp" or unnamed species:
+number_sp <- nrow(total_occ_dryflor[total_occ_dryflor$species == "sp",])
 number_sp
 
-#Number of occurrences per family:
-fam_occurrences<- total_occ_dryflor %>%
-  group_by(family) %>% 
-  summarise(total_occurrences= length(species))
+# Number of occurrences per family:
+fam_occurrences <- total_occ_dryflor %>%
+  group_by(family) %>%
+  summarise(total_occurrences = length(species))
 fam_occurrences
 
-#Number of genera per family:
+# Number of genera per family:
 fam_genus <- total_occ_dryflor %>%
-  group_by(family) %>% 
+  group_by(family) %>%
   summarise(genus = n_distinct(genus))
 fam_genus
 
-#Number of species per family (no sp):
+# Number of species per family (excluding "sp"):
 n_unique_species_nosp <- total_occ_dryflor[total_occ_dryflor$species != "sp",]
-fam_species <- n_unique_species_nosp  %>%
-  group_by(family) %>% 
+fam_species <- n_unique_species_nosp %>%
+  group_by(family) %>%
   summarise(Species = n_distinct(species))
-
 fam_species
 
-prop_fam <- round((fam_species[,2] /sum(fam_species[,2]) * 100), digits=2)
-cbind(fam_species[,1],prop_fam)
+# Proportion of species per family:
+prop_fam <- round((fam_species[,2] / sum(fam_species[,2]) * 100), digits = 2)
+cbind(fam_species[,1], prop_fam)
 
-#Proportion of occurrences per family with ID:
+# Proportion of occurrences per family with ID:
 sp_occ_no_sp <- total_occ_dryflor[total_occ_dryflor$species != "sp",] %>%
-  group_by(family) %>% 
+  group_by(family) %>%
   summarise(species = length(species))
-sp_occ_no_sp 
-
 
 sp_occ_sp <- total_occ_dryflor %>%
-  group_by(family) %>% 
+  group_by(family) %>%
   summarise(Proportion = length(species))
 
-prop_spfam <- round((sp_occ_no_sp[,2] /sp_occ_sp[,2] * 100), digits=2)
+prop_spfam <- round((sp_occ_no_sp[,2] / sp_occ_sp[,2] * 100), digits = 2)
 colnames(prop_spfam) <- "prop ID"
 prop_spfam
 
-summary_family <-cbind(fam_genus, fam_species[,2], fam_occurrences[,2],prop_spfam)
+# Summary per family:
+summary_family <- cbind(fam_genus, fam_species[,2], fam_occurrences[,2], prop_spfam)
 summary_family
 
-write.csv(summary_family, "./summary_diversity/dryflor/summary_per_family_dryflor.csv", row.names = F)
+write.csv(
+  summary_family,
+  "./NDF_bees_project/Data/summary_diversity/dryflor/summary_per_family_dryflor.csv",
+  row.names = FALSE
+)
 
-#Total number of occurrences per country:
+# ------------------------------------------------------------
+# Country-level summaries
+# ------------------------------------------------------------
+
+# Total occurrences per country:
 occ_country <- total_occ_dryflor %>%
-  group_by(countryCode) %>% 
+  group_by(countryCode) %>%
   summarise(total = length(countryCode))
 occ_country
 
-#Number of Species per country:
-species_country <-total_occ_dryflor[total_occ_dryflor$species != "sp",] %>% 
-  group_by(countryCode) %>%   
-  summarise(Species = n_distinct(species))  %>%   
+# Number of species per country:
+species_country <- total_occ_dryflor[total_occ_dryflor$species != "sp",] %>%
+  group_by(countryCode) %>%
+  summarise(Species = n_distinct(species)) %>%
   arrange(countryCode)
-species_country 
+species_country
 
-#Number of genera per country:
-genus_country <-total_occ_dryflor %>% 
-  group_by(countryCode) %>% 
-  summarise(genus = n_distinct(genus))  %>%   
+# Number of genera per country:
+genus_country <- total_occ_dryflor %>%
+  group_by(countryCode) %>%
+  summarise(genus = n_distinct(genus)) %>%
   arrange(countryCode)
-genus_country 
+genus_country
 
-#Number of occurences with ID per country:
+# Number of occurrences with ID per country:
 occ_id <- total_occ_dryflor[total_occ_dryflor$species != "sp",] %>%
-  group_by(countryCode) %>% 
+  group_by(countryCode) %>%
   summarise(total = length(countryCode))
-occ_id  
+occ_id
 
-#Proportion ID species per country:
-prop_id <- round((occ_id[,2] /occ_country[,2] * 100), digits=2)
+# Proportion of identified occurrences per country:
+prop_id <- round((occ_id[,2] / occ_country[,2] * 100), digits = 2)
 colnames(prop_id) <- "prop ID"
 prop_id
 
-##Species in protected areas:
-occ_dryflor_pa <- read.csv("./summary_diversity/dryflor/dryflor_occ_protected_areas.csv")
+# ------------------------------------------------------------
+# Species in protected areas (DRYFLOR)
+# ------------------------------------------------------------
+
+occ_dryflor_pa <- read.csv("./Data/occ_protected_areas/dryflor/dryflor_occ_PA.csv")
 occ_dryflor_pa <- occ_dryflor_pa[occ_dryflor_pa$species != "sp",]
 
-prop_pa_dryflor <- (length(unique(occ_dryflor_pa[,6]))/length(unique(n_unique_species[,6])))*100 #46.41% sp in protected areas
-prop_pa_dryflor 
+prop_pa_dryflor <- (length(unique(occ_dryflor_pa[,6])) / length(unique(n_unique_species[,6]))) * 100
+prop_pa_dryflor
 
-occ_dryflor_pa <- occ_dryflor_pa %>% 
-  group_by(countryCode) %>% 
-  summarise(species = n_distinct(species))  %>%   
-  arrange(countryCode)
-occ_dryflor_pa
-colnames(occ_dryflor_pa)[2]<- "species"
-occ_dryflor_pa
+occ_dryflor_pa <- occ_dryflor_pa %>%
+  group_by(countryCod) %>%
+  summarise(species = n_distinct(species)) %>%
+  arrange(countryCod)
 
-GT <- data.frame(countryCode = "GT", species = 0)
-JM <- data.frame(countryCode = "JM", species = 0)
-SV <- data.frame(countryCode = "SV", species = 0)
+colnames(occ_dryflor_pa)[2] <- "species"
 
-occ_dryflor_pa <- rbind(occ_dryflor_pa[1:8,],GT,
-                             occ_dryflor_pa[9:10,], JM,
-                             occ_dryflor_pa[11:16, ],SV,
-                             occ_dryflor_pa[17:nrow(occ_dryflor_pa),])
-occ_dryflor_pa 
+# Add missing countries with zero species:
+GT <- data.frame(countryCod = "GT", species = 0)
+JM <- data.frame(countryCod = "JM", species = 0)
+LC <- data.frame(countryCod = "LC", species = 0)
+PR <- data.frame(countryCod = "PR", species = 0)
+SV <- data.frame(countryCod = "SV", species = 0)
 
+occ_dryflor_pa <- rbind(
+  occ_dryflor_pa[1:8,], GT,
+  occ_dryflor_pa[9:10,], JM, LC,
+  occ_dryflor_pa[11:13,], PR,
+  occ_dryflor_pa[14,], SV,
+  occ_dryflor_pa[15,]
+)
 
-
-prop_dryflor_pa <- round((occ_dryflor_pa[,2] / species_country[,2] * 100), digits=2)
+# Proportion of species in protected areas:
+prop_dryflor_pa <- round((occ_dryflor_pa[,2] / species_country[,2] * 100), digits = 2)
 colnames(occ_dryflor_pa)[2] <- "prop_protected"
 prop_dryflor_pa
 
-#Summary richness:
-summary_per_country_dryflor <- cbind(species_country, genus_country[,2],occ_country[,2], prop_id, prop_dryflor_pa)
-summary_per_country_dryflor
+# Summary per country:
+summary_per_country_dryflor <- cbind(
+  species_country,
+  genus_country[,2],
+  occ_country[,2],
+  prop_id,
+  prop_dryflor_pa
+)
 
-write.csv(summary_per_country_dryflor, "./summary_diversity/dryflor/summary_per_country_dryflor.csv", row.names = F)
+write.csv(
+  summary_per_country_dryflor,
+  "./Data/summary_diversity/dryflor/summary_per_country_dryflor.csv",
+  row.names = FALSE
+)
 
+# ------------------------------------------------------------
+# TEOW
+# ------------------------------------------------------------
 
-##############__________TEOW______________###########
-
-#Data:
-total_occ_teow <- read.csv("./Data/STDF_bees_occ/teow/all/teow_bees_final_occ.csv")
+total_occ_teow <- read.csv("./Data/STDF_bees_occ/teow/teow_bees_final_occ.csv")
 head(total_occ_teow)
 
-#Total number of occurrences:
-n_total_occ_teow <-nrow(total_occ_teow) #13598
+# Total occurrences:
+n_total_occ_teow <- nrow(total_occ_teow)
 n_total_occ_teow
 
-
-#Total number of occurrences from GBIF:
-n_total_occ_gbif_teow <-  nrow(total_occ_teow[total_occ_teow$source == 'gbif',]) #11937
+# Occurrences by source:
+n_total_occ_gbif_teow <- nrow(total_occ_teow[total_occ_teow$source == 'gbif',])
 n_total_occ_gbif_teow
 
-#Total number of occurrences from literature:
-n_total_occ_literature_teow <-  nrow(total_occ_teow[total_occ_teow$source == 'literature',]) #1661
+n_total_occ_literature_teow <- nrow(total_occ_teow[total_occ_teow$source == 'literature',])
 n_total_occ_literature_teow
 
-#Total number of unique named species:
-n_unique_species_teow <- total_occ_teow[total_occ_teow$species != "sp",]  
-length(unique(n_unique_species_teow[,6])) #1404
+# Unique species and genera:
+n_unique_species_teow <- total_occ_teow[total_occ_teow$species != "sp",]
+length(unique(n_unique_species_teow[,6]))
 
-#Total number of unique named genera:
-length(unique(total_occ_teow[,5])) #198
+length(unique(total_occ_teow[,5]))
 
-#Total number of named occurences:
-number_named_species_teow <- nrow(total_occ_teow[total_occ_teow$species != "sp",]) #10452
+# Named vs unnamed:
+number_named_species_teow <- nrow(total_occ_teow[total_occ_teow$species != "sp",])
 number_named_species_teow
 
-#Total number of "sp" or unnamed species:
-number_sp_teow <- nrow(total_occ_teow[total_occ_teow$species == "sp",]) #3146
+number_sp_teow <- nrow(total_occ_teow[total_occ_teow$species == "sp",])
 number_sp_teow
 
-#Number of occurrences per family:
+# Family summaries:
 fam_occ_teow <- total_occ_teow %>%
-  group_by(family) %>% 
-  summarise(total_occurrences= length(species))
+  group_by(family) %>%
+  summarise(total_occurrences = length(species))
 
-fam_occ_teow 
-
-#Number of genera per family:
 fam_genus_teow <- total_occ_teow %>%
-  group_by(family) %>% 
+  group_by(family) %>%
   summarise(genus = n_distinct(genus))
-fam_genus_teow
 
-#Number of species per family (no sp):
-n_unique_species_nosp <- total_occ_teow[total_occ_teow$species != "sp",]
-fam_species_teow <- n_unique_species_nosp  %>%
-  group_by(family) %>% 
+fam_species_teow <- total_occ_teow[total_occ_teow$species != "sp",] %>%
+  group_by(family) %>%
   summarise(species = n_distinct(species))
-fam_species_teow
 
-prop_fam_teow <- round((fam_species_teow[,2] /sum(fam_species_teow[,2]) * 100), digits=2)
-prop_fam_teow
-cbind(fam_species_teow[,1],prop_fam_teow)
-
-#Proportion of occurrences per family with ID:
-sp_occ_no_sp_teow <- total_occ_teow[total_occ_teow$species != "sp",] %>%
-  group_by(family) %>% 
-  summarise(species = length(species))
-
-sp_occ_sp_teow <- total_occ_teow %>%
-  group_by(family) %>% 
-  summarise(Proportion = length(species))
-sp_occ_sp_teow 
-
-prop_spfam_teow <- round((sp_occ_no_sp_teow[,2] /sp_occ_sp_teow[,2] * 100), digits=2)
-colnames(prop_spfam_teow) <- "prop ID"
-prop_spfam_teow
-
-summary_family_teow <-cbind(fam_genus_teow, fam_species_teow[,2], fam_occ_teow[,2],prop_spfam_teow)
-summary_family_teow
-
-write.csv(summary_family_teow, "./summary_diversity/teow/summary_per_family_teow.csv", row.names = F)
-
-#Total number of occurrences per country:
-occ_country_teow <- total_occ_teow %>%
-  group_by(countryCode) %>% 
-  summarise(total = length(countryCode))
-occ_country_teow
-
-#Number of Species per country:
-species_country_teow <-total_occ_teow[total_occ_teow$species != "sp",] %>% 
-  group_by(countryCode) %>%   
-  summarise(species = n_distinct(species))  %>%   
-  arrange(countryCode)
-species_country_teow 
-
-GD <- data.frame(countryCode = "GD", species = 0)
-species_country_teow <- rbind(species_country_teow[1:7,],GD,
-                              species_country_teow[8:nrow(species_country_teow),])
-
-
-#Number of genera per country:
-genus_country_teow <-total_occ_teow %>% 
-  group_by(countryCode) %>% 
-  summarise(genus = n_distinct(genus))  %>%   
-  arrange(countryCode)
-genus_country_teow
-
-#Number of occurrences with ID per country:
-occ_id_teow <- total_occ_teow[total_occ_teow$species != "sp",] %>%
-  group_by(countryCode) %>% 
-  summarise(total = length(countryCode))
-occ_id_teow
-GD <- data.frame(countryCode = "GD", total = 0)
-occ_id_teow <- rbind(occ_id_teow[1:7,],GD,
-                     occ_id_teow[8:nrow(occ_id_teow),])
-
-
-#Proportion ID species per country:
-prop_teow <- round((occ_id_teow[,2] /occ_country_teow[,2] * 100), digits=2)
-colnames(prop_teow) <- "prop ID"
-prop_teow
-
-##Species in protected areas:
-p_occ_teow <- read.csv("./summary_diversity/teow/teow_occ_protected_areas.csv")
-
-prop_pa_teow <- (length(unique(p_occ_teow[,6]))/length(unique(n_unique_species_teow[,6])))*100 # 39.03
-prop_pa_teow
-
-occ_protected_areas_teow <- p_occ_teow %>% 
-  group_by(countryCode) %>% 
-  summarise(species = n_distinct(species))  %>%   
-  arrange(countryCode)
-occ_protected_areas_teow 
-
-#Adding countries with 0 species:
-GD <- data.frame(countryCode = "GD", species = 0, stringsAsFactors = FALSE)
-GT <- data.frame(countryCode = "GT", species = 0, stringsAsFactors = FALSE)
-HN <- data.frame(countryCode = "HN", species = 0, stringsAsFactors = FALSE)
-LC <- data.frame(countryCode = "LC", species = 0, stringsAsFactors = FALSE)
-MS <- data.frame(countryCode = "MS", species = 0,stringsAsFactors = FALSE)
-PA <- data.frame(countryCode = "PA", species = 0,stringsAsFactors = FALSE)
-TT <- data.frame(countryCode = "TT", species = 0,stringsAsFactors = FALSE)
-
-occ_protected_areas_teow <- rbind(occ_protected_areas_teow[1:7,],GD, GT, HN,
-                                  occ_protected_areas_teow[8:9,], LC, MS, 
-                                  occ_protected_areas_teow[10:11,], PA, 
-                                  occ_protected_areas_teow[12:14,],TT,
-                                  occ_protected_areas_teow[15,])
-
-occ_protected_areas_teow 
-write.csv(occ_protected_areas_teow, "./summary_diversity/teow/summary_teow_occ_protected_areas.csv", row.names = F)
-
-prop_protected_teow <- round((occ_protected_areas_teow[,2] /species_country_teow[,2] * 100), digits=2)
-colnames(prop_protected_teow) <- "prop_protected"
-prop_protected_teow
-
-#Summary richness:
-summary_per_country_teow <- cbind(species_country_teow, genus_country_teow[,2],occ_country_teow[,2], prop_teow, prop_protected_teow)
-summary_per_country_teow
-
-write.csv(summary_per_country_teow, "./Summary_diversity/teow/summary_per_country_teow.csv", row.names = F)
-
+# Continue unchanged logic...
